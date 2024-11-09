@@ -1,6 +1,9 @@
 import torch
+import torchvision
 from torch import nn
 import timm
+from torchvision.models import DenseNet121_Weights
+
 import config as CFG
 
 
@@ -10,7 +13,7 @@ class ImageEncoder(nn.Module):
     """
 
     def __init__(
-        self, model_name=CFG.model_name, pretrained=CFG.pretrained, trainable=CFG.trainable
+            self, model_name=CFG.model_name, pretrained=CFG.pretrained, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -21,14 +24,29 @@ class ImageEncoder(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
+
+class DenseEncoder(nn.Module):
+
+    def __init__(
+            self, model_name='densenet', pretrained=CFG.pretrained, trainable=CFG.trainable
+    ):
+        super().__init__()
+        self.model = torchvision.models.densenet121(DenseNet121_Weights.IMAGENET1K_V1)
+        for p in self.model.parameters():
+            p.requires_grad = trainable
+
+    def forward(self, x):
+        return self.model(x)
+
+
 class ImageEncoder_resnet50(nn.Module):
     """
     Encode images to a fixed size vector
     """
 
     def __init__(
-        self, model_name='resnet50', pretrained=CFG.pretrained, trainable=CFG.trainable
+            self, model_name='resnet50', pretrained=CFG.pretrained, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -39,14 +57,15 @@ class ImageEncoder_resnet50(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
+
 class ImageEncoder_resnet101(nn.Module):
     """
     Encode images to a fixed size vector
     """
 
     def __init__(
-        self, model_name='resnet101', pretrained=True, trainable=CFG.trainable
+            self, model_name='resnet101', pretrained=True, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -57,14 +76,15 @@ class ImageEncoder_resnet101(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
+
 class ImageEncoder_resnet152(nn.Module):
     """
     Encode images to a fixed size vector
     """
 
     def __init__(
-        self, model_name='resnet152', pretrained=True, trainable=CFG.trainable
+            self, model_name='resnet152', pretrained=True, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -75,14 +95,15 @@ class ImageEncoder_resnet152(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
+
 class ImageEncoder_ViT(nn.Module):
     """
     Encode images to a fixed size vector
     """
 
     def __init__(
-        self, model_name="vit_base_patch32_224", pretrained=False, trainable=CFG.trainable
+            self, model_name="vit_base_patch32_224", pretrained=False, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -93,7 +114,7 @@ class ImageEncoder_ViT(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
 
 class ImageEncoder_CLIP(nn.Module):
     """
@@ -101,7 +122,7 @@ class ImageEncoder_CLIP(nn.Module):
     """
 
     def __init__(
-        self, model_name="vit_base_patch32_224_clip_laion2b", pretrained=True, trainable=CFG.trainable
+            self, model_name="vit_base_patch32_224_clip_laion2b", pretrained=True, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -112,6 +133,7 @@ class ImageEncoder_CLIP(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
 
 class ImageEncoder_ViT_L(nn.Module):
     """
@@ -119,7 +141,7 @@ class ImageEncoder_ViT_L(nn.Module):
     """
 
     def __init__(
-        self, model_name="vit_large_patch32_224_in21k", pretrained=False, trainable=CFG.trainable
+            self, model_name="vit_large_patch32_224_in21k", pretrained=False, trainable=CFG.trainable
     ):
         super().__init__()
         self.model = timm.create_model(
@@ -130,13 +152,12 @@ class ImageEncoder_ViT_L(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-    
+
 
 #  'vit_base_patch32_224',
 #  'vit_base_patch32_224_clip_laion2b',
 #  'vit_base_patch32_224_in21k',
 #  'vit_base_patch32_224_sam',
-    
 
 
 # class SpotEncoder(nn.Module):
@@ -147,7 +168,7 @@ class ImageEncoder_ViT_L(nn.Module):
 #             self.model = DistilBertModel.from_pretrained(model_name)
 #         else:
 #             self.model = DistilBertModel(config=DistilBertConfig())
-            
+
 #         for p in self.model.parameters():
 #             p.requires_grad = trainable
 
@@ -160,13 +181,12 @@ class ImageEncoder_ViT_L(nn.Module):
 #         return last_hidden_state[:, self.target_token_idx, :]
 
 
-
 class ProjectionHead(nn.Module):
     def __init__(
-        self,
-        embedding_dim,
-        projection_dim=CFG.projection_dim,
-        dropout=CFG.dropout
+            self,
+            embedding_dim,
+            projection_dim=CFG.projection_dim,
+            dropout=CFG.dropout
     ):
         super().__init__()
         self.projection = nn.Linear(embedding_dim, projection_dim)
@@ -174,7 +194,7 @@ class ProjectionHead(nn.Module):
         self.fc = nn.Linear(projection_dim, projection_dim)
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(projection_dim)
-    
+
     def forward(self, x):
         projected = self.projection(x)
         x = self.gelu(projected)
